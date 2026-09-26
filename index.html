@@ -151,14 +151,7 @@ const STATIONS = [
  {id:'colors', name:'الألوان', emoji:'🎨', color:'var(--purple)'},
 ];
 const LEVELS = {
- arabic:[
-  {id:'ar1', type:'tap', prompt:'اختر الصورة التي تبدأ بحرف "ب"', say:'اختر الصورة التي تبدأ بحرف باء',
-   choices:[{e:'🦆',l:'بطة',ok:1},{e:'🐱',l:'قطة',ok:0}]},
-  {id:'ar2', type:'tap', prompt:'ما الكلمة التي تبدأ بحرف "ت"؟', say:'ما الكلمة التي تبدأ بحرف تاء',
-   choices:[{e:'🍎',l:'تفاحة',ok:1},{e:'⚽',l:'كرة',ok:0},{e:'🌙',l:'قمر',ok:0}]},
-  {id:'ar3', type:'dragdrop', prompt:'اسحب كل كلمة إلى صورتها', say:'اسحب كل كلمة إلى صورتها الصحيحة',
-   pairs:[{w:'جمل',e:'🐫'},{w:'بيت',e:'🏠'},{w:'قطة',e:'🐱'}]},
- ],
+ arabic:[], // built below by buildArabicLevels()
  numbers:[
   {id:'n1', type:'tap', prompt:'أين توجد 3 نجوم؟', say:'اختر المجموعة التي تحتوي على ثلاث نجوم',
    choices:[{e:'⭐⭐⭐',l:'',ok:1},{e:'⭐⭐',l:'',ok:0}]},
@@ -177,6 +170,58 @@ const LEVELS = {
  ],
 };
 const STICKERS = ['🦁','🐘','🦋','🐢','🚀','🐬','🌈','🦖'];
+
+/* full Arabic alphabet — data-driven letter levels */
+const ARABIC_LETTERS = [
+ {ch:'ا', dd:[['أسد','🦁'],['أرنب','🐰'],['إوزة','🦢']], distract:[['قطة','🐱'],['تفاحة','🍎']]},
+ {ch:'ب', dd:[['باب','🚪'],['بطة','🦆'],['بيت','🏠']], distract:[['تفاحة','🍎'],['سمكة','🐟']]},
+ {ch:'ت', dd:[['تفاحة','🍎'],['تمساح','🐊'],['تاج','👑']], distract:[['كرة','⚽'],['قمر','🌙']]},
+ {ch:'ث', dd:[['ثعلب','🦊'],['ثلج','❄️'],['ثوب','👘']], distract:[['عصفور','🐦'],['نجمة','⭐']]},
+ {ch:'ج', dd:[['جمل','🐫'],['جزر','🥕'],['جبل','⛰️']], distract:[['قطة','🐱'],['نجمة','⭐']]},
+ {ch:'ح', dd:[['حصان','🐴'],['حمامة','🕊️'],['حذاء','👞']], distract:[['بطة','🦆'],['شمس','☀️']]},
+ {ch:'خ', dd:[['خروف','🐑'],['خيار','🥒'],['خاتم','💍']], distract:[['تفاحة','🍎'],['قمر','🌙']]},
+ {ch:'د', dd:[['دب','🐻'],['دجاجة','🐔'],['دولاب','🛞']], distract:[['كرة','⚽'],['سمكة','🐟']]},
+ {ch:'ذ', dd:[['ذئب','🐺'],['ذرة','🌽'],['ذهب','🥇']], distract:[['بطة','🦆'],['نجمة','⭐']]},
+ {ch:'ر', dd:[['ريشة','🪶'],['رسالة','✉️'],['رجل','🚶']], distract:[['قطة','🐱'],['شمس','☀️']]},
+ {ch:'ز', dd:[['زرافة','🦒'],['زهرة','🌸'],['زيتون','🫒']], distract:[['كرة','⚽'],['قمر','🌙']]},
+ {ch:'س', dd:[['سمكة','🐟'],['سيارة','🚗'],['ساعة','⌚']], distract:[['تفاحة','🍎'],['نجمة','⭐']]},
+ {ch:'ش', dd:[['شمس','☀️'],['شجرة','🌳'],['شاي','🍵']], distract:[['بطة','🦆'],['كرة','⚽']]},
+ {ch:'ص', dd:[['صقر','🦅'],['صندوق','📦'],['صورة','🖼️']], distract:[['قطة','🐱'],['تفاحة','🍎']]},
+ {ch:'ض', dd:[['ضفدع','🐸'],['ضوء','💡'],['ضرس','🦷']], distract:[['كرة','⚽'],['نجمة','⭐']]},
+ {ch:'ط', dd:[['طائرة','✈️'],['طبق','🍽️'],['طائر','🐦']], distract:[['بطة','🦆'],['شمس','☀️']]},
+ {ch:'ظ', dd:[['ظرف','✉️'],['ظبي','🦌'],['ظل','🌳']], distract:[['قطة','🐱'],['قمر','🌙']]},
+ {ch:'ع', dd:[['عصفور','🐦'],['عنب','🍇'],['عين','👁️']], distract:[['كرة','⚽'],['تفاحة','🍎']]},
+ {ch:'غ', dd:[['غزال','🦌'],['غيمة','☁️'],['غراب','🐦']], distract:[['بطة','🦆'],['نجمة','⭐']]},
+ {ch:'ف', dd:[['فيل','🐘'],['فراشة','🦋'],['فأر','🐭']], distract:[['قطة','🐱'],['شمس','☀️']]},
+ {ch:'ق', dd:[['قطة','🐱'],['قمر','🌙'],['قلم','✏️']], distract:[['بطة','🦆'],['تفاحة','🍎']]},
+ {ch:'ك', dd:[['كرة','⚽'],['كتاب','📖'],['كلب','🐕']], distract:[['قطة','🐱'],['نجمة','⭐']]},
+ {ch:'ل', dd:[['ليمون','🍋'],['لبن','🥛'],['لعبة','🧸']], distract:[['كرة','⚽'],['شمس','☀️']]},
+ {ch:'م', dd:[['موز','🍌'],['منزل','🏠'],['ماء','💧']], distract:[['قطة','🐱'],['نجمة','⭐']]},
+ {ch:'ن', dd:[['نجمة','⭐'],['نمر','🐯'],['نحلة','🐝']], distract:[['كرة','⚽'],['تفاحة','🍎']]},
+ {ch:'ه', dd:[['هدية','🎁'],['هلال','🌙'],['هاتف','📱']], distract:[['قطة','🐱'],['بطة','🦆']]},
+ {ch:'و', dd:[['وردة','🌹'],['وزة','🦢'],['ولد','👦']], distract:[['كرة','⚽'],['شمس','☀️']]},
+ {ch:'ي', dd:[['يد','✋'],['يمامة','🕊️'],['يخت','🛥️']], distract:[['قطة','🐱'],['نجمة','⭐']]},
+];
+function buildArabicLevels(){
+  return ARABIC_LETTERS.map((L,i)=>{
+    const id = 'ar'+(i+1);
+    const label = `حرف "${L.ch}"`;
+    if(i < 10){
+      const nChoices = i < 5 ? 2 : 3;
+      const correct = {e:L.dd[0][1], l:L.dd[0][0], ok:1};
+      const wrong = L.distract.slice(0, nChoices-1).map(d=>({e:d[1], l:d[0], ok:0}));
+      return {id, type:'tap', prompt:`اختر الكلمة التي تبدأ بـ${label}`, say:`اختر الكلمة التي تبدأ بحرف ${L.ch}`,
+        choices: shuffle([correct, ...wrong])};
+    }
+    if(i < 19){
+      return {id, type:'dragdrop', prompt:`اسحب كل كلمة إلى صورتها — ${label}`, say:`اسحب كل كلمة إلى صورتها الصحيحة`,
+        pairs: L.dd.map(([w,e])=>({w,e}))};
+    }
+    return {id, type:'memory', prompt:`اقلب البطاقات وطابق الصور — ${label}`, say:`اقلب البطاقات وابحث عن الصور المتطابقة`,
+      items: L.dd.map(([,e])=>e)};
+  });
+}
+LEVELS.arabic = buildArabicLevels();
 
 /* ---------- state ---------- */
 const KEY='lg_state_v1';
@@ -341,19 +386,6 @@ const SCREENS = {
       ${mascotHTML('idle','')}
     </div>`;
   },
-
-  complete: ()=> `
-    <div class="screen">
-      <h1>🎉 أحسنت!</h1>
-      ${mascotHTML('happy','أنت بطل!')}
-      <div class="complete-stars">${'⭐'.repeat(nav.result)}${'☆'.repeat(3-nav.result)}</div>
-      <p class="sub" style="text-align:center;">لقد أكملت هذا المستوى بنجاح</p>
-      <div class="footer-row" style="flex-direction:column; gap:10px;">
-        <button class="big-btn" style="background:var(--green)" data-go="activity" data-extra='{"station":"${nav.station}","levelIdx":${Math.min(nav.levelIdx+1, LEVELS[nav.station].length-1)}}'>➡ المستوى التالي</button>
-        <button class="big-btn" style="background:var(--yellow); color:#6b5300" data-go="activity" data-extra='{"station":"${nav.station}","levelIdx":${nav.levelIdx}}'>🔁 إعادة المحاولة</button>
-        <button class="big-btn" style="background:#c9c2d6" data-go="map">🏠 الخريطة</button>
-      </div>
-    </div>`,
 
   stickers: ()=> {
     const unlocked = Math.floor(totalStars()/3);
@@ -525,7 +557,19 @@ function finishLevel(stars){
   const prev = state.stars[L.id]||0;
   state.stars[L.id] = Math.max(prev, stars);
   save();
-  go('complete', {result: stars});
+  const lv = LEVELS[nav.station];
+  const isLast = nav.levelIdx >= lv.length - 1;
+  const sIdx = STATIONS.findIndex(s=>s.id===nav.station);
+  const nextStation = STATIONS[sIdx+1];
+  if(!isLast){
+    go('activity', {station:nav.station, levelIdx:nav.levelIdx+1});
+  } else if(nextStation){
+    speak(`أحسنت! أكملت محطة ${STATIONS[sIdx].name}`);
+    go('activity', {station:nextStation.id, levelIdx:0});
+  } else {
+    speak('أحسنت! أنهيت كل المحطات');
+    go('map');
+  }
 }
 
 /* ---------- delegated bindings for dynamic screens ---------- */
