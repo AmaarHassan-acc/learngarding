@@ -1,0 +1,494 @@
+/* ---------- data ---------- */
+const STATIONS = [
+ {id:'arabic', name:'الحروف العربية', emoji:'🔤', color:'var(--pink)'},
+ {id:'numbers', name:'الأرقام', emoji:'🔢', color:'var(--blue)'},
+ {id:'colors', name:'الألوان', emoji:'🎨', color:'var(--purple)'},
+ {id:'fruits', name:'الفواكهة', emoji:'🍎', color:'var(--orange)'},
+];
+const LEVELS = {
+ arabic:[], // built below by buildArabicLevels()
+ numbers:[
+  {id:'n1', type:'tap', prompt:'أين توجد 3 نجوم؟', say:'اختر المجموعة التي تحتوي على ثلاث نجوم',
+   choices:[{e:'⭐⭐⭐',l:'',ok:1},{e:'⭐⭐',l:'',ok:0}]},
+  {id:'n2', type:'tap', prompt:'ما هو العدد الأكبر؟', say:'اختر العدد الأكبر',
+   choices:[{e:'2',l:'',ok:0},{e:'5',l:'',ok:1},{e:'3',l:'',ok:0}]},
+  {id:'n3', type:'dragdrop', prompt:'اسحب كل رقم إلى كميته', say:'اسحب كل رقم إلى الكمية الصحيحة',
+   pairs:[{w:'1',e:'🍎'},{w:'2',e:'🍎🍎'},{w:'3',e:'🍎🍎🍎'}]},
+ ],
+ colors:[
+  {id:'c1', type:'tap', prompt:'أين اللون الأحمر؟', say:'اختر اللون الأحمر',
+   choices:[{e:'🔴',l:'أحمر',ok:1},{e:'🔵',l:'أزرق',ok:0}]},
+  {id:'c2', type:'tap', prompt:'ما لون هذه الموزة؟', say:'ما هو لون الموزة',
+   choices:[{e:'🟡',l:'أصفر',ok:1},{e:'🟢',l:'أخضر',ok:0},{e:'🟣',l:'بنفسجي',ok:0}]},
+  {id:'c3', type:'memory', prompt:'اقلب البطاقات وابحث عن الألوان المتطابقة', say:'اقلب البطاقات وابحث عن كل لونين متطابقين',
+   items:['🔴','🔵','🟢']},
+ ],
+};
+const STICKERS = ['🦁','🐘','🦋','🐢','🚀','🐬','🌈','🦖'];
+
+/* full Arabic alphabet — data-driven letter levels */
+const ARABIC_LETTERS = [
+ {ch:'ا', dd:[['أسد','🦁'],['أرنب','🐰'],['إوزة','🦢']], distract:[['قطة','🐱'],['تفاحة','🍎']]},
+ {ch:'ب', dd:[['باب','🚪'],['بطة','🦆'],['بيت','🏠']], distract:[['تفاحة','🍎'],['سمكة','🐟']]},
+ {ch:'ت', dd:[['تفاحة','🍎'],['تمساح','🐊'],['تاج','👑']], distract:[['كرة','⚽'],['قمر','🌙']]},
+ {ch:'ث', dd:[['ثعلب','🦊'],['ثلج','❄️'],['ثوب','👘']], distract:[['عصفور','🐦'],['نجمة','⭐']]},
+ {ch:'ج', dd:[['جمل','🐫'],['جزر','🥕'],['جبل','⛰️']], distract:[['قطة','🐱'],['نجمة','⭐']]},
+ {ch:'ح', dd:[['حصان','🐴'],['حمامة','🕊️'],['حذاء','👞']], distract:[['بطة','🦆'],['شمس','☀️']]},
+ {ch:'خ', dd:[['خروف','🐑'],['خيار','🥒'],['خاتم','💍']], distract:[['تفاحة','🍎'],['قمر','🌙']]},
+ {ch:'د', dd:[['دب','🐻'],['دجاجة','🐔'],['دولاب','🛞']], distract:[['كرة','⚽'],['سمكة','🐟']]},
+ {ch:'ذ', dd:[['ذئب','🐺'],['ذرة','🌽'],['ذهب','🥇']], distract:[['بطة','🦆'],['نجمة','⭐']]},
+ {ch:'ر', dd:[['ريشة','🪶'],['رسالة','✉️'],['رجل','🚶']], distract:[['قطة','🐱'],['شمس','☀️']]},
+ {ch:'ز', dd:[['زرافة','🦒'],['زهرة','🌸'],['زيتون','🫒']], distract:[['كرة','⚽'],['قمر','🌙']]},
+ {ch:'س', dd:[['سمكة','🐟'],['سيارة','🚗'],['ساعة','⌚']], distract:[['تفاحة','🍎'],['نجمة','⭐']]},
+ {ch:'ش', dd:[['شمس','☀️'],['شجرة','🌳'],['شاي','🍵']], distract:[['بطة','🦆'],['كرة','⚽']]},
+ {ch:'ص', dd:[['صقر','🦅'],['صندوق','📦'],['صورة','🖼️']], distract:[['قطة','🐱'],['تفاحة','🍎']]},
+ {ch:'ض', dd:[['ضفدع','🐸'],['ضوء','💡'],['ضرس','🦷']], distract:[['كرة','⚽'],['نجمة','⭐']]},
+ {ch:'ط', dd:[['طائرة','✈️'],['طبق','🍽️'],['طائر','🐦']], distract:[['بطة','🦆'],['شمس','☀️']]},
+ {ch:'ظ', dd:[['ظرف','✉️'],['ظبي','🦌'],['ظل','🌳']], distract:[['قطة','🐱'],['قمر','🌙']]},
+ {ch:'ع', dd:[['عصفور','🐦'],['عنب','🍇'],['عين','👁️']], distract:[['كرة','⚽'],['تفاحة','🍎']]},
+ {ch:'غ', dd:[['غزال','🦌'],['غيمة','☁️'],['غراب','🐦']], distract:[['بطة','🦆'],['نجمة','⭐']]},
+ {ch:'ف', dd:[['فيل','🐘'],['فراشة','🦋'],['فأر','🐭']], distract:[['قطة','🐱'],['شمس','☀️']]},
+ {ch:'ق', dd:[['قطة','🐱'],['قمر','🌙'],['قلم','✏️']], distract:[['بطة','🦆'],['تفاحة','🍎']]},
+ {ch:'ك', dd:[['كرة','⚽'],['كتاب','📖'],['كلب','🐕']], distract:[['قطة','🐱'],['نجمة','⭐']]},
+ {ch:'ل', dd:[['ليمون','🍋'],['لبن','🥛'],['لعبة','🧸']], distract:[['كرة','⚽'],['شمس','☀️']]},
+ {ch:'م', dd:[['موز','🍌'],['منزل','🏠'],['ماء','💧']], distract:[['قطة','🐱'],['نجمة','⭐']]},
+ {ch:'ن', dd:[['نجمة','⭐'],['نمر','🐯'],['نحلة','🐝']], distract:[['كرة','⚽'],['تفاحة','🍎']]},
+ {ch:'ه', dd:[['هدية','🎁'],['هلال','🌙'],['هاتف','📱']], distract:[['قطة','🐱'],['بطة','🦆']]},
+ {ch:'و', dd:[['وردة','🌹'],['وزة','🦢'],['ولد','👦']], distract:[['كرة','⚽'],['شمس','☀️']]},
+ {ch:'ي', dd:[['يد','✋'],['يمامة','🕊️'],['يخت','🛥️']], distract:[['قطة','🐱'],['نجمة','⭐']]},
+];
+function buildArabicLevels(){
+  return ARABIC_LETTERS.map((L,i)=>{
+    const id = 'ar'+(i+1);
+    const label = `حرف "${L.ch}"`;
+    if(i < 10){
+      const nChoices = i < 5 ? 2 : 3;
+      const correct = {e:L.dd[0][1], l:L.dd[0][0], ok:1};
+      const wrong = L.distract.slice(0, nChoices-1).map(d=>({e:d[1], l:d[0], ok:0}));
+      return {id, type:'tap', prompt:`اختر الكلمة التي تبدأ بـ${label}`, say:`اختر الكلمة التي تبدأ بحرف ${L.ch}`,
+        choices: shuffle([correct, ...wrong])};
+    }
+    if(i < 19){
+      return {id, type:'dragdrop', prompt:`اسحب كل كلمة إلى صورتها — ${label}`, say:`اسحب كل كلمة إلى صورتها الصحيحة`,
+        pairs: L.dd.map(([w,e])=>({w,e}))};
+    }
+    return {id, type:'memory', prompt:`اقلب البطاقات وطابق الصور — ${label}`, say:`اقلب البطاقات وابحث عن الصور المتطابقة`,
+      items: L.dd.map(([,e])=>e)};
+  });
+}
+LEVELS.arabic = buildArabicLevels();
+
+/* fruits — pick the letter each fruit's name starts with */
+const FRUITS = [
+ {word:'موزة', emoji:'🍌', letter:'م', distract:['ا','س']},
+ {word:'أناناس', emoji:'🍍', letter:'أ', distract:['ن','ي']},
+ {word:'تفاحة', emoji:'🍎', letter:'ت', distract:['ك','ن']},
+ {word:'عنب', emoji:'🍇', letter:'ع', distract:['ح','و']},
+ {word:'برتقالة', emoji:'🍊', letter:'ب', distract:['ص','هـ']},
+ {word:'فراولة', emoji:'🍓', letter:'ف', distract:['ق','ج']},
+ {word:'بطيخة', emoji:'🍉', letter:'ب', distract:['ذ','ط']},
+ {word:'كمثرى', emoji:'🍐', letter:'ك', distract:['ل','ز']},
+];
+function buildFruitLevels(){
+  return FRUITS.map((f,i)=>({
+    id:'fr'+(i+1), type:'letterpick',
+    prompt:'ما الحرف الذي تبدأ به هذه الكلمة؟',
+    say:`ما الحرف الذي تبدأ به كلمة ${f.word}`,
+    emoji:f.emoji, word:f.word, correct:f.letter,
+    choices: shuffle([f.letter, ...f.distract])
+  }));
+}
+LEVELS.fruits = buildFruitLevels();
+
+/* ---------- state ---------- */
+const KEY='lg_state_v1';
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem(KEY)) || def(); }catch(e){ return def(); }
+}
+function def(){ return {stars:{}, settings:{sound:true, voice:true, motion:true}}; }
+let state = loadState();
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function totalStars(){ return Object.values(state.stars).reduce((a,b)=>a+b,0); }
+function maxStars(){ return Object.values(LEVELS).reduce((a,arr)=>a+arr.length*3,0); }
+
+/* ---------- audio ---------- */
+let actx;
+function beep(ok){
+  if(!state.settings.sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.connect(g); g.connect(actx.destination);
+    o.frequency.value = ok ? 660 : 220;
+    g.gain.setValueAtTime(.15, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .35);
+    o.start(); o.stop(actx.currentTime + .35);
+  }catch(e){}
+}
+function speak(text){
+  if(!state.settings.voice || !window.speechSynthesis) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='ar-SA'; u.rate=0.9;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------- nav ---------- */
+let nav = {screen:'home', station:null, levelIdx:0, result:0};
+const app = document.getElementById('app');
+document.body.classList.toggle('reduced', !state.settings.motion);
+
+function go(screen, extra){ nav = Object.assign(nav, {screen}, extra||{}); render(); }
+
+/* ---------- mascot ---------- */
+function mascotSVG(mood){
+  const eyes = mood==='happy' ? '<circle cx="35" cy="42" r="4"/><circle cx="61" cy="42" r="4"/>' :
+               '<circle cx="35" cy="42" r="5"/><circle cx="61" cy="42" r="5"/>';
+  const mouth = mood==='happy' ? '<path d="M32 58 Q48 72 64 58" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>' :
+               '<ellipse cx="48" cy="58" rx="8" ry="5" fill="#fff"/>';
+  return `<svg viewBox="0 0 96 96"><circle cx="48" cy="50" r="42" fill="#ffcf6e"/>
+    <ellipse cx="24" cy="30" rx="9" ry="12" fill="#ffcf6e"/><ellipse cx="72" cy="30" rx="9" ry="12" fill="#ffcf6e"/>
+    ${eyes}${mouth}<circle cx="30" cy="55" r="6" fill="#ffb08a" opacity=".6"/><circle cx="66" cy="55" r="6" fill="#ffb08a" opacity=".6"/></svg>`;
+}
+function mascotHTML(mood, text){
+  return `<div class="mascot-wrap"><div class="mascot ${mood==='happy'?'happy':''}">${mascotSVG(mood)}</div>
+    ${text?`<div class="bubble">${text}</div>`:''}</div>`;
+}
+
+/* ---------- confetti ---------- */
+function confetti(){
+  if(!state.settings.motion) return;
+  const colors=['#ff9ec8','#ffd76b','#7cc4ff','#7ed99a','#b79bf0'];
+  for(let i=0;i<24;i++){
+    const d=document.createElement('div');
+    d.className='confetti';
+    d.style.left=Math.random()*100+'vw';
+    d.style.background=colors[i%colors.length];
+    d.style.transform=`rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(d);
+    const dur=1400+Math.random()*900;
+    d.animate([{transform:d.style.transform+' translateY(0)'},{transform:d.style.transform+` translateY(${window.innerHeight+40}px)`}],
+      {duration:dur, easing:'ease-in'});
+    setTimeout(()=>d.remove(), dur);
+  }
+}
+
+/* ---------- screens ---------- */
+function render(){
+  app.innerHTML = SCREENS[nav.screen]();
+  bindGlobal();
+  if(nav.screen==='activity') bindActivity();
+}
+function bindGlobal(){
+  app.querySelectorAll('[data-go]').forEach(el=>{
+    el.onclick = ()=> go(el.dataset.go, el.dataset.extra ? JSON.parse(el.dataset.extra) : null);
+  });
+}
+
+const SCREENS = {
+  home: ()=> `
+    <div class="screen">
+      <h1>🌳 حديقة التعلّم</h1>
+      <p class="sub">تعلّم واحصل على النجوم!</p>
+      ${mascotHTML('idle','أهلاً بك! هل أنت جاهز للعب؟')}
+      <div class="stars-pill" style="align-self:center; margin-bottom:16px;">⭐ ${totalStars()} / ${maxStars()}</div>
+      <button class="big-btn" style="background:var(--pink)" data-go="map">▶ العب الآن</button>
+      <button class="big-btn" style="background:var(--yellow); color:#6b5300" data-go="stickers">⭐ الجوائز والملصقات</button>
+      <button class="big-btn" style="background:var(--blue)" data-go="settings">⚙ الإعدادات</button>
+      <button class="big-btn" style="background:#c9c2d6" id="parentBtn">👨‍👩‍👧 أولياء الأمور</button>
+    </div>`,
+
+  map: ()=> `
+    <div class="screen">
+      <div class="topbar"><button class="icon-btn" data-go="home">🏠</button><div class="stars-pill">⭐ ${totalStars()}</div></div>
+      <h2>خريطة حديقة التعلّم</h2>
+      ${STATIONS.map((s,i)=>{
+        const st = stationStars(s.id);
+        const locked = false; // all stations open for demo
+        return `<div class="map-station ${locked?'locked':''}" data-go="${locked?'':'levels'}" data-extra='{"station":"${s.id}"}'>
+          <div class="emoji" style="background:${s.color}; border-radius:14px; padding:8px;">${s.emoji}</div>
+          <div class="info"><div class="name">${s.name}</div><div class="stars">⭐ ${st.earned} / ${st.max}</div></div>
+          ${locked?'🔒':'▶'}
+        </div>`;
+      }).join('')}
+    </div>`,
+
+  levels: ()=> {
+    const s = STATIONS.find(x=>x.id===nav.station);
+    const lv = LEVELS[nav.station];
+    return `<div class="screen">
+      <div class="topbar"><button class="icon-btn" data-go="map">🏠</button><div class="stars-pill">${s.emoji} ${s.name}</div></div>
+      <h2>اختر مستوى</h2>
+      <div class="level-grid">
+        ${lv.map((L,i)=>{
+          const st = state.stars[L.id]||0;
+          const locked = i>0 && !state.stars[lv[i-1].id];
+          return `<button class="level-btn ${locked?'locked':''}" ${locked?'':`data-go="activity" data-extra='{"station":"${nav.station}","levelIdx":${i}}'`}>
+            ${locked?'🔒':(i+1)}<span class="stars">${'⭐'.repeat(st)}</span></button>`;
+        }).join('')}
+      </div>
+    </div>`;
+  },
+
+  activity: ()=> {
+    const L = LEVELS[nav.station][nav.levelIdx];
+    let body = '';
+    if(L.type==='tap'){
+      const cls = L.choices.length===2?'c2':'c3';
+      body = `<div class="choices ${cls}" id="choices">
+        ${L.choices.map((c,i)=>`<div class="choice" data-i="${i}"><div>${c.e}</div>${c.l?`<div class="lbl">${c.l}</div>`:''}</div>`).join('')}
+      </div>`;
+    } else if(L.type==='dragdrop'){
+      body = `<div class="dd-area">
+        <div class="dd-col" id="chips">${L.pairs.map((p,i)=>`<div class="chip" data-w="${p.w}">${p.w}</div>`).join('')}</div>
+        <div class="dd-col" id="zones">${shuffle(L.pairs).map((p,i)=>`<div class="dzone" data-w="${p.w}">${p.e}</div>`).join('')}</div>
+      </div>`;
+    } else if(L.type==='memory'){
+      const cards = shuffle([...L.items,...L.items]);
+      body = `<div class="mem-grid" id="memGrid">${cards.map((v,i)=>`<div class="mem-card" data-v="${v}" data-i="${i}">❓</div>`).join('')}</div>`;
+    } else if(L.type==='letterpick'){
+      body = `<div class="prompt-image">${L.emoji}</div><div class="prompt-word">${L.word}</div>
+        <div class="choices c3" id="choices">
+          ${L.choices.map(c=>`<div class="choice" data-c="${c}">${c}</div>`).join('')}
+        </div>`;
+    }
+    return `<div class="screen">
+      <div class="topbar">
+        <button class="icon-btn" data-go="levels" data-extra='{"station":"${nav.station}"}'>🏠</button>
+        <div class="stars-pill">⭐ ${totalStars()}</div>
+        <button class="icon-btn" id="speakBtn">🔊</button>
+      </div>
+      <div class="activity-card">
+        <div class="prompt">${L.prompt}</div>
+        ${body}
+        <p class="msg" id="actMsg"></p>
+      </div>
+      ${mascotHTML('idle','')}
+    </div>`;
+  },
+
+  stickers: ()=> {
+    const unlocked = Math.floor(totalStars()/3);
+    return `<div class="screen">
+      <div class="topbar"><button class="icon-btn" data-go="home">🏠</button><div class="stars-pill">⭐ ${totalStars()}</div></div>
+      <h2>📖 دفتر الملصقات</h2>
+      <p class="sub">كل 3 نجوم تفتح ملصقاً جديداً</p>
+      <div class="sticker-grid">
+        ${STICKERS.map((s,i)=>`<div class="sticker ${i<unlocked?'':'locked'}">${i<unlocked?s:'❓'}</div>`).join('')}
+      </div>
+    </div>`;
+  },
+
+  settings: ()=> `
+    <div class="screen">
+      <div class="topbar"><button class="icon-btn" data-go="home">🏠</button><div></div></div>
+      <h2>⚙ الإعدادات</h2>
+      <div class="setting-row">🔊 المؤثرات الصوتية <button class="toggle ${state.settings.sound?'on':''}" id="tSound"></button></div>
+      <div class="setting-row">🗣 التعليمات الصوتية <button class="toggle ${state.settings.voice?'on':''}" id="tVoice"></button></div>
+      <div class="setting-row">✨ الحركات والاحتفالات <button class="toggle ${state.settings.motion?'on':''}" id="tMotion"></button></div>
+    </div>`,
+
+  parentGate: ()=> {
+    if(!nav.q) nav.q = {a:Math.ceil(Math.random()*6)+3, b:Math.ceil(Math.random()*6)+2};
+    return `<div class="screen">
+      <h2>منطقة أولياء الأمور</h2>
+      <p class="sub">للتأكيد، ما ناتج ${nav.q.a} + ${nav.q.b} ؟</p>
+      <div class="choices c3">
+        ${shuffle([nav.q.a+nav.q.b, nav.q.a+nav.q.b+2, nav.q.a+nav.q.b-1]).map(v=>`<div class="choice" data-pv="${v}"><div>${v}</div></div>`).join('')}
+      </div>
+      <p class="msg" id="gateMsg"></p>
+      <button class="big-btn" style="background:#c9c2d6; margin-top:10px;" data-go="home">إلغاء</button>
+    </div>`;
+  },
+
+  parentDash: ()=> {
+    const completed = Object.keys(state.stars).length;
+    const total = Object.values(LEVELS).reduce((a,arr)=>a+arr.length,0);
+    const acc = completed ? Math.round((totalStars()/(completed*3))*100) : 0;
+    return `<div class="screen">
+      <div class="topbar"><button class="icon-btn" data-go="home">🏠</button><div></div></div>
+      <h2>👨‍👩‍👧 لوحة ولي الأمر</h2>
+      <div class="activity-card">
+        <p>المستويات المكتملة: <b>${completed} / ${total}</b></p>
+        <p>مجموع النجوم: <b>${totalStars()} / ${maxStars()}</b></p>
+        <p>نسبة الإتقان: <b>${acc}%</b></p>
+        <p>الأقسام: ${STATIONS.map(s=>`${s.name} (${stationStars(s.id).earned}/${stationStars(s.id).max}⭐)`).join('، ')}</p>
+      </div>
+      <button class="big-btn" style="background:var(--bad); color:#fff" id="resetBtn">إعادة تعيين التقدم</button>
+    </div>`;
+  },
+};
+
+function stationStars(id){
+  const lv = LEVELS[id];
+  const earned = lv.reduce((a,L)=>a+(state.stars[L.id]||0),0);
+  return {earned, max: lv.length*3};
+}
+function shuffle(a){ return a.slice().sort(()=>Math.random()-0.5); }
+
+/* ---------- activity logic ---------- */
+let attempts = 0;
+function bindActivity(){
+  attempts = 0;
+  const L = LEVELS[nav.station][nav.levelIdx];
+  document.getElementById('speakBtn').onclick = ()=> speak(L.say || L.prompt);
+  setTimeout(()=> speak(L.say || L.prompt), 350);
+
+  if(L.type==='tap'){
+    const els = [...document.querySelectorAll('#choices .choice')];
+    els.forEach(el=>{
+      el.onclick = ()=>{
+        const c = L.choices[+el.dataset.i];
+        const msg = document.getElementById('actMsg');
+        if(c.ok){
+          el.classList.add('correct'); beep(true); confetti();
+          msg.textContent='أحسنت! 🎉'; msg.className='msg ok';
+          setTimeout(()=> finishLevel(3-Math.min(attempts,2)), 700);
+        } else {
+          el.classList.add('wrong'); beep(false); attempts++;
+          msg.textContent='حاول مرة أخرى'; msg.className='msg bad';
+          setTimeout(()=>el.classList.remove('wrong'), 500);
+          if(attempts>=2){
+            const correctEl = els[L.choices.findIndex(x=>x.ok)];
+            correctEl.classList.add('pulse');
+          }
+        }
+      };
+    });
+  }
+
+  if(L.type==='letterpick'){
+    const els = [...document.querySelectorAll('#choices .choice')];
+    els.forEach(el=>{
+      el.onclick = ()=>{
+        const msg = document.getElementById('actMsg');
+        if(el.dataset.c === L.correct){
+          el.classList.add('correct'); beep(true); confetti();
+          msg.textContent='أحسنت! 🎉'; msg.className='msg ok';
+          setTimeout(()=> finishLevel(3-Math.min(attempts,2)), 700);
+        } else {
+          el.classList.add('wrong'); beep(false); attempts++;
+          msg.textContent='حاول مرة أخرى'; msg.className='msg bad';
+          setTimeout(()=>el.classList.remove('wrong'), 500);
+          if(attempts>=2){
+            const correctEl = els.find(x=>x.dataset.c===L.correct);
+            correctEl.classList.add('pulse');
+          }
+        }
+      };
+    });
+  }
+
+  if(L.type==='dragdrop'){
+    let filled = 0;
+    const chips = [...document.querySelectorAll('.chip')];
+    chips.forEach(chip=>{
+      chip.addEventListener('pointerdown', e=>{
+        e.preventDefault();
+        const rect = chip.getBoundingClientRect();
+        chip.classList.add('dragging');
+        chip.style.width = rect.width+'px';
+        move(e);
+        function move(ev){
+          chip.style.left = (ev.clientX - rect.width/2)+'px';
+          chip.style.top = (ev.clientY - rect.height/2)+'px';
+        }
+        function up(ev){
+          document.removeEventListener('pointermove', move);
+          document.removeEventListener('pointerup', up);
+          chip.classList.remove('dragging');
+          chip.style.left=''; chip.style.top=''; chip.style.width='';
+          const zones = [...document.querySelectorAll('.dzone')];
+          const target = zones.find(z=>{
+            const r = z.getBoundingClientRect();
+            return ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
+          });
+          const msg = document.getElementById('actMsg');
+          if(target && !target.classList.contains('filled')){
+            if(target.dataset.w === chip.dataset.w){
+              target.classList.add('filled');
+              target.innerHTML = target.innerHTML + ` <span style="font-size:1rem">${chip.dataset.w}</span>`;
+              chip.classList.add('placed'); beep(true);
+              filled++;
+              msg.textContent='أحسنت! 🎉'; msg.className='msg ok';
+              if(filled === chips.length){ confetti(); setTimeout(()=> finishLevel(3-Math.min(attempts,2)), 600); }
+            } else {
+              beep(false); attempts++;
+              msg.textContent='ليس هذا المكان، حاول مرة أخرى'; msg.className='msg bad';
+            }
+          }
+        }
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', up);
+      });
+    });
+  }
+
+  if(L.type==='memory'){
+    let flipped = [], matched = 0, lock=false;
+    document.querySelectorAll('.mem-card').forEach(card=>{
+      card.onclick = ()=>{
+        if(lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+        card.classList.add('flipped'); card.textContent = card.dataset.v;
+        flipped.push(card);
+        if(flipped.length===2){
+          lock = true;
+          const msg = document.getElementById('actMsg');
+          if(flipped[0].dataset.v === flipped[1].dataset.v){
+            flipped.forEach(c=>c.classList.add('matched'));
+            beep(true); matched++;
+            msg.textContent='رائع! تطابق صحيح'; msg.className='msg ok';
+            flipped=[]; lock=false;
+            if(matched === L.items.length){ confetti(); setTimeout(()=> finishLevel(3-Math.min(attempts,2)), 600); }
+          } else {
+            beep(false); attempts++;
+            msg.textContent='حاول مرة أخرى'; msg.className='msg bad';
+            setTimeout(()=>{
+              flipped.forEach(c=>{c.classList.remove('flipped'); c.textContent='❓';});
+              flipped=[]; lock=false;
+            }, 700);
+          }
+        }
+      };
+    });
+  }
+}
+
+function finishLevel(stars){
+  const L = LEVELS[nav.station][nav.levelIdx];
+  const prev = state.stars[L.id]||0;
+  state.stars[L.id] = Math.max(prev, stars);
+  save();
+  const lv = LEVELS[nav.station];
+  const isLast = nav.levelIdx >= lv.length - 1;
+  const sIdx = STATIONS.findIndex(s=>s.id===nav.station);
+  const nextStation = STATIONS[sIdx+1];
+  if(!isLast){
+    go('activity', {station:nav.station, levelIdx:nav.levelIdx+1});
+  } else if(nextStation){
+    speak(`أحسنت! أكملت محطة ${STATIONS[sIdx].name}`);
+    go('activity', {station:nextStation.id, levelIdx:0});
+  } else {
+    speak('أحسنت! أنهيت كل المحطات');
+    go('map');
+  }
+}
+
+/* ---------- delegated bindings for dynamic screens ---------- */
+document.addEventListener('click', e=>{
+  if(e.target.id==='parentBtn'){ go('parentGate'); }
+  if(e.target.id==='tSound'){ state.settings.sound=!state.settings.sound; save(); render(); }
+  if(e.target.id==='tVoice'){ state.settings.voice=!state.settings.voice; save(); render(); }
+  if(e.target.id==='tMotion'){ state.settings.motion=!state.settings.motion; document.body.classList.toggle('reduced', !state.settings.motion); save(); render(); }
+  if(e.target.id==='resetBtn'){ if(confirm('هل تريد إعادة تعيين كل التقدم؟')){ state = def(); save(); go('home'); } }
+  const pv = e.target.closest('[data-pv]');
+  if(pv){
+    const correct = nav.q.a + nav.q.b;
+    if(+pv.dataset.pv === correct){ nav.q=null; go('parentDash'); }
+    else { document.getElementById('gateMsg').textContent='حاول مرة أخرى'; document.getElementById('gateMsg').className='msg bad'; }
+  }
+});
+
+render();
